@@ -9,7 +9,7 @@ noUiSlider.create(range, {
     start: [ 0 ], // Handle start position
     step: 5, // Slider moves in increments of '10'
     margin: 20, // Handles must be more than '20' apart
-    direction: 'rtl', // Put '0' at the bottom of the slider
+    direction: 'ltr', // Put '0' at the bottom of the slider
     orientation: 'horizontal',
     range: { // Slider can select '0' to '100'
         'min': -180,
@@ -20,6 +20,7 @@ noUiSlider.create(range, {
         density: 2
     }
 });
+
 
 /**
  *
