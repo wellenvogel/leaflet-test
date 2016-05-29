@@ -1,154 +1,53 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>Leaflet Test</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="lib/leaflet.css" />
-    <link href="lib/nouislider.min.css" rel="stylesheet">
-    <style>
-        #mapid{
-            position: absolute;
-            left:0;
-            top:0;
-            bottom:0;
-            right: 0;
-            overflow: hidden;
-            background-color: lightgrey;
-        }
-        .leaflet-rmap-container{
-            position: absolute;
-            margin:0;
-            padding: 0;
-            border:0;
-            overflow: hidden;
-        }
-        .leaflet-rmap-div{
-            position: absolute;
-            top:0;
-            left:0;
-            right: 0;
-            bottom: 0;
-            margin:0;
-            padding: 0;
-            border: 0;
-            overflow: hidden;
-        }
-        #sliderContainer{
-            height: 20px;
-            width: 60%;
-            position: absolute;
-            left: 20%;
-            top: 5%;
-            z-index: 9999;
-        }
-        #sliderRotate{
-            background-color: green;
-            display: inline-block;
-            height: 100%;
-            width: 70%;
-        }
-        #sliderRValue{
-            width: 9%;
-            display: inline-block;
-            overflow: hidden;
-            margin-left: 1.5em;
-        }
-        #updateSvg{
-            display: inline-block;
-            margin-right: 1.5em;
-        }
-        #centerMarker{
-            z-index: 998;
-            position: absolute;
-            pointer-events: none;
-        }
-        #clickMarker{
-            z-index: 999;
-            position: absolute;
-            pointer-events: none;
-        }
-        #positionDisplay{
-            position: absolute;
-            z-index: 9999;
-            right: 3em;
-            bottom: 1em;
-            background-color: white;
-        }
-        #mousePositionDisplay{
-            position: absolute;
-            z-index: 9999;
-            right: 3em;
-            bottom: 3em;
-            background-color: white;
-        }
-        .pos{
-            display: inline-block;
-            width: 6em;
-            text-align: end;
-            margin-right: 1em;
-        }
-        #testScroll{
-            display: none;
-            position: absolute;
-            z-index: 9999;
-            left:1em;
-            bottom: 1em;
-            height: 60px;
-        }
-        #buttonContainer{
-            position: absolute;
-            left: 1em;
-            top: 1em;
-        }
-        #buttonContainer button{
-            font-size: 1.5em;
-            width: 2em;
-            height: 2em;
-            display: block;
-            margin-top: 0.3em;
-        }
-    </style>
-</head>
-<body>
-<div id="container">
-    <div id="sliderContainer">
-        <span>SVG</span><input type="checkbox" id="updateSvg" checked />
-        <div id="sliderRotate"></div>
-        <div id="sliderRValue"></div>
-    </div>
-    <div id="mapid">
-        <svg id="centerMarker" width="20" height="20">
-            <circle r="5" cx="10" cy="10" stroke="black" stroke-width="1"></circle>
-        </svg>
-        <svg id="clickMarker" width="20" height="20">
-            <line x1="10" y1="0" x2="10" y2="20" stroke="black" stroke-width="1"></line>
-            <line x1="0" y1="10" x2="20" y2="10" stroke="black" stroke-width="1"></line>
-        </svg>
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="chrome=1">
+    <title>Leaflet-test by wellenvogel</title>
 
-    </div>
-    <div id="positionDisplay">
-        <span class="label">Center: Lat</span><span id="posLat" class="pos"></span>
-        <span class="label">Lon</span><span id="posLon" class="pos"></span>
-    </div>
-    <div id="mousePositionDisplay">
-        <span class="label">Click: Lat</span><span id="mousePosLat" class="pos"></span>
-        <span class="label">Lon</span><span id="mousePosLon" class="pos"></span>
-    </div>
-    <button id="testScroll">Scroll</button>
-    <div id="buttonContainer">
-        <button id="zoomIn">+</button>
-        <button id="zoomOut">-</button>
-    </div>
-</div>
+    <link rel="stylesheet" href="stylesheets/styles.css">
+    <link rel="stylesheet" href="stylesheets/github-light.css">
+    <meta name="viewport" content="width=device-width">
+    <!--[if lt IE 9]>
+    <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+  </head>
+  <body>
+    <div class="wrapper">
+      <header>
+        <h1>Leaflet-test</h1>
+        <p>trying leaflet for avnav</p>
 
-<!--<script src="http://cdn.leafletjs.com/leaflet/v0.7.7/leaflet.js"></script>-->
-<script src="lib/leaflet-src.js"></script>
-<script src="lib/nouislider.min.js"></script>
-<script src="map/RDrag.js"></script>
-<script src="map/RMap.js"></script>
-<script src="map/SMap.js"></script>
-<script src="test.js"></script>
+        <p class="view"><a href="https://github.com/wellenvogel/leaflet-test">View the Project on GitHub <small>wellenvogel/leaflet-test</small></a></p>
 
-</body>
+
+        <ul>
+          <li><a href="https://github.com/wellenvogel/leaflet-test/zipball/master">Download <strong>ZIP File</strong></a></li>
+          <li><a href="https://github.com/wellenvogel/leaflet-test/tarball/master">Download <strong>TAR Ball</strong></a></li>
+          <li><a href="https://github.com/wellenvogel/leaflet-test">View On <strong>GitHub</strong></a></li>
+        </ul>
+      </header>
+      <section>
+        <h1>
+<a id="leaflet-test" class="anchor" href="#leaflet-test" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>leaflet-test</h1>
+
+<p>trying leaflet for avnav</p>
+
+<p>Playground for trying leaflet.</p>
+
+<ol>
+<li><p>map rotation - rotate the map div by css transform and consider this in mouse coordinates</p></li>
+<li><p>sparse layers - show lower zoom level tiles when no higher level tiles are there</p></li>
+</ol>
+
+<p>Try it out: <a href="index.html">here</a></p>
+      </section>
+      <footer>
+        <p>This project is maintained by <a href="https://github.com/wellenvogel">wellenvogel</a></p>
+        <p><small>Hosted on GitHub Pages &mdash; Theme by <a href="https://github.com/orderedlist">orderedlist</a></small></p>
+      </footer>
+    </div>
+    <script src="javascripts/scale.fix.js"></script>
+    
+  </body>
 </html>
