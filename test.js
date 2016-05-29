@@ -200,6 +200,7 @@ function onMap(e){
 }
 mymap.on('move',onMap);
 mymap.on('moveend',onMap);
+mymap.on('zoomend',updatePopUps);
 
 /**
  * test the scroll behavior
