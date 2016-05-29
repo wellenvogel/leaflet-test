@@ -9,6 +9,10 @@ L.RMap=L.Map.extend({
         if (options.dragging !== undefined){
             options.rdrag=options.dragging;
         }
+        this._normalSvg=true;
+        if (options.normalSvg !== undefined){
+            this._normalSvg=options.normalSvg;
+        }
         options.dragging=false;
         this._frame=document.getElementById(div);
         if (! this._frame) throw new Error("Map div "+div+" not found");
@@ -21,7 +25,6 @@ L.RMap=L.Map.extend({
         if (options.rdrag){
             this.addHandler("rdrag", L.Map.RDrag);
         }
-        this._normalSvg=true;
     },
     setSizes: function(){
         var rect=this._frame.getBoundingClientRect();
@@ -83,6 +86,14 @@ L.RMap=L.Map.extend({
         );
         rt = this.rotatePointInvers(rt, center);
         return rt;
+    },
+    getContainerCenter: function(){
+        var rect = this._rcontainer.getBoundingClientRect();
+        var center = new L.point(
+            rect.width / 2,
+            rect.height / 2
+        );
+        return center;
     },
     _updateSvgViewport: function () {
 

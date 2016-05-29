@@ -21,6 +21,47 @@ noUiSlider.create(range, {
     }
 });
 
+/**
+ *
+ * @param {number} coordinate
+ * @param axis
+ * @returns {string}
+ */
+function formatLonLatsDecimal(coordinate,axis){
+    coordinate = (coordinate+540)%360 - 180; // normalize for sphere being round
+
+    var abscoordinate = Math.abs(coordinate);
+    var coordinatedegrees = Math.floor(abscoordinate);
+
+    var coordinateminutes = (abscoordinate - coordinatedegrees)/(1/60);
+    var numdecimal=2;
+    //correctly handle the toFixed(x) - will do math rounding
+    if (coordinateminutes.toFixed(numdecimal) == 60){
+        coordinatedegrees+=1;
+        coordinateminutes=0;
+    }
+    if( coordinatedegrees < 10 ) {
+        coordinatedegrees = "0" + coordinatedegrees;
+    }
+    if (coordinatedegrees < 100 && axis == 'lon'){
+        coordinatedegrees = "0" + coordinatedegrees;
+    }
+    var str = coordinatedegrees + "\u00B0";
+
+    if( coordinateminutes < 10 ) {
+        str +="0";
+    }
+    str += coordinateminutes.toFixed(numdecimal) + "'";
+    if (axis == "lon") {
+        str += coordinate < 0 ? "W" :"E";
+    } else {
+        str += coordinate < 0 ? "S" :"N";
+    }
+    return str;
+};
+
+
+
 var valueDiv = document.getElementById('sliderRValue');
 var mapdiv=document.getElementById('mapid');
 
@@ -54,29 +95,23 @@ L.tileLayer('https://api.tiles.mapbox.com/v4/{id}/{z}/{x}/{y}.png?access_token=p
 }).addTo(mymap);
 
 
-L.marker([51.5, -0.09]).addTo(mymap)
-    .bindPopup("<b>Hello world!</b><br />I am a popup.").openPopup();
 
-L.circle([51.508, -0.11], 500, {
-    color: 'red',
-    fillColor: '#f03',
-    fillOpacity: 0.5
-}).addTo(mymap).bindPopup("I am a circle.");
-
-L.polygon([
-    [51.509, -0.08],
-    [51.503, -0.06],
-    [51.51, -0.047]
-]).addTo(mymap).bindPopup("I am a polygon.");
 mymap.setView([54.1, 13.45], 13);
 
-var popup = L.popup();
 
-function onMapClick(e) {
-    popup
-        .setLatLng(e.latlng)
-        .setContent("You clicked the map at " + e.latlng.toString())
-        .openOn(mymap);
+
+function updatePos(){
+    var centerPoint=mymap.getContainerCenter();
+    var centerPos=mymap.containerPointToLatLng(centerPoint);
+    var lat=formatLonLatsDecimal(centerPos.lat,"lat");
+    var lon=formatLonLatsDecimal(centerPos.lng,"lon");
+    document.getElementById('posLat').innerHTML=lat;
+    document.getElementById('posLon').innerHTML=lon;
 }
+function onMap(e){
+    updatePos();
+}
+mymap.on('move',onMap);
+mymap.on('moveend',onMap);
 
-mymap.on('click', onMapClick);
+updatePos();

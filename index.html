@@ -54,6 +54,19 @@
             z-index: 999;
             position: absolute;
         }
+        #positionDisplay{
+            position: absolute;
+            z-index: 9999;
+            right: 3em;
+            bottom: 1em;
+            background-color: white;
+        }
+        .pos{
+            display: inline-block;
+            width: 6em;
+            text-align: end;
+            margin-right: 1em;
+        }
     </style>
 </head>
 <body>
@@ -67,6 +80,10 @@
     <svg id="centerMarker" width="30" height="30">
         <circle r="5" cx="10" cy="10" stroke="black" stroke-width="1"></circle>
     </svg>
+    </div>
+    <div id="positionDisplay">
+        <span class="label">Lat</span><span id="posLat" class="pos"></span>
+        <span class="label">Lon</span><span id="posLon" class="pos"></span>
     </div>
 </div>
 
