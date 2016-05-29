@@ -144,7 +144,7 @@ L.RMap=L.Map.extend({
         return this._rmapToFrame(unrotated);
     },
     /**
-     * convert a point on the frame to a point on the container
+     * convert a point on the frame to a point on the map container
      * @param point
      * @returns {*}
      */
