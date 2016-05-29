@@ -67,13 +67,15 @@ var valueDiv = document.getElementById('sliderRValue');
 var mapdiv=document.getElementById('mapid');
 
 var mymap = new L.SMap('mapid');
-
+var currentRotation=0;
 
 // When the slider value changes, update the input and span
 range.noUiSlider.on('update', function( values, handle ) {
     var v=values[handle];
     valueDiv.innerHTML = v;
+    currentRotation=v;
     mymap.setRotation(v);
+    updatePopUps();
 });
 
 var check=document.getElementById('updateSvg');
@@ -124,7 +126,38 @@ L.tileLayer('https://api.tiles.mapbox.com/v4/{id}/{z}/{x}/{y}.png?access_token=p
 
 
 mymap.setView([54.1, 13.45], 13);
-
+/**
+ * really experimental support for rotating popUps
+ * must be called after a popup has been created and on each rotation
+ */
+function updatePopUps(){
+    var popups=document.getElementsByClassName('leaflet-popup');
+    var i=0;
+    var rotation=0-parseInt(currentRotation);
+    for (i=0;i<popups.length;i++){
+        var popup=popups[i];
+        var height=popup.clientHeight;
+        var width=popup.clientWidth;
+        //we need to handle styles- only very limited here...
+        var bottom=popup.style.bottom;
+        if (bottom){
+            bottom=bottom.replace(/ *px/,"");
+            bottom=parseInt(bottom);
+            height+=bottom;
+        }
+        var ostr=width/2+"px "+height+"px 0";
+        popup.style.transformOrigin=ostr;
+        popup.style.webkitTransformOrigin=ostr;
+        var oldTransform=popup.style[L.DomUtil.TRANSFORM];
+        if (oldTransform){
+            oldTransform=oldTransform.replace(/  *rotate[^ ]* */,'');
+        }
+        else{
+            oldTransform="";
+        }
+        popup.style[L.DomUtil.TRANSFORM]=oldTransform+" rotate("+rotation+"deg)";
+    };
+};
 
 function onMapClick(e) {
     var lat=formatLonLatsDecimal(e.latlng.lat,"lat");
@@ -132,6 +165,11 @@ function onMapClick(e) {
     document.getElementById('mousePosLat').innerHTML=lat;
     document.getElementById('mousePosLon').innerHTML=lon;
     setElementPosition('clickMarker',mymap.containerPointToFramePoint(e.containerPoint));
+    L.popup()
+        .setLatLng(e.latlng)
+        .setContent("You clicked the map at " + e.latlng.toString())
+        .openOn(mymap);
+    updatePopUps();
 }
 
 mymap.on('click',onMapClick);
