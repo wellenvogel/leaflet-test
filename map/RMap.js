@@ -1,29 +1,38 @@
 /**
  * Created by andreas on 28.05.16.
+ * an extended leaflet map that allows to rotate it
+ * the provided div needs at least position relative to be set
+ * it will create 2 additional containers:
+ * _rcontainer: a div with a square size that will ensure that with every rotation angle the map fills the outer div
+ *              this one will not be rotated and will be used for all translations of pointer positions
+ * _rmapdiv: the leaflet map - this will be rotated
+ * it will additionally install a a modified Drag handler as mouse positions/direction need to be converted
+ * currently all pop up and text is rotated together with the map...
  */
 
 L.RMap=L.Map.extend({
     initialize: function(div,options){
-        if (! options) options={};
-        options.rdrag=true;
-        if (options.dragging !== undefined){
-            options.rdrag=options.dragging;
-        }
-        this._normalSvg=true;
-        if (options.normalSvg !== undefined){
-            this._normalSvg=options.normalSvg;
-        }
-        options.dragging=false;
         this._frame=document.getElementById(div);
         if (! this._frame) throw new Error("Map div "+div+" not found");
+        if (! options) options={};
+        if (options.preventScroll ===undefined || options.preventScroll) {
+            //there seem to be situations where the frame gets scrolled - so we revert this here...
+            this._frame.onscroll = function () {
+                this.scrollTop = 0;
+                this.scrollLeft = 0;
+            };
+        }
         this._rcontainer= L.DomUtil.create("div","leaflet-rmap-container",this._frame);
         this._rmapdiv=L.DomUtil.create("div","leaflet-rmap-div",this._rcontainer);
         this.setSizes();
+        var dragging=options.dragging === undefined || options.dragging;
+        options.dragging=false; //we have to be a bit tricky: first disable loading of the original drag handler
         L.Map.prototype.initialize.call(this,this._rmapdiv,options);
         this._matrix=[1,0,0,1,0,0];
         this._imatrix=[1,0,0,1,0,0];
-        if (options.rdrag){
-            this.addHandler("rdrag", L.Map.RDrag);
+        if (dragging){
+            this.options.dragging=true; //now enable loading of OUR draghandler
+            this.addHandler('dragging', L.Map.RDrag); //overwrite the original drag handler
         }
     },
     setSizes: function(){
@@ -94,42 +103,5 @@ L.RMap=L.Map.extend({
             rect.height / 2
         );
         return center;
-    },
-    _updateSvgViewport: function () {
-
-        if (this._pathZooming) {
-            // Do not update SVGs while a zoom animation is going on otherwise the animation will break.
-            // When the zoom animation ends we will be updated again anyway
-            // This fixes the case where you do a momentum move and zoom while the move is still ongoing.
-            return;
-        }
-
-        this._updatePathViewport();
-
-        var vp = this._pathViewport,
-            min = vp.min,
-            max = vp.max,
-            width = max.x - min.x,
-            height = max.y - min.y,
-            root = this._pathRoot,
-            pane = this._panes.overlayPane;
-
-        // Hack to make flicker on drag end on mobile webkit less irritating
-        if (L.Browser.mobileWebkit && this._normalSvg) {
-            pane.removeChild(root);
-        }
-
-        L.DomUtil.setPosition(root, min);
-        root.setAttribute('width', width);
-        root.setAttribute('height', height);
-        root.setAttribute('viewBox', [min.x, min.y, width, height].join(' '));
-
-        if (L.Browser.mobileWebkit && this._normalSvg) {
-            pane.appendChild(root);
-        }
-    },
-    setSvg: function(b){
-        this._normalSvg=b;
     }
-
 });

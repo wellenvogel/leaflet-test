@@ -65,7 +65,7 @@ function formatLonLatsDecimal(coordinate,axis){
 var valueDiv = document.getElementById('sliderRValue');
 var mapdiv=document.getElementById('mapid');
 
-var mymap = new L.RMap('mapid');
+var mymap = new L.SMap('mapid');
 
 var mapRect=mapdiv.getBoundingClientRect();
 var center=document.getElementById("centerMarker");
@@ -99,6 +99,15 @@ L.tileLayer('https://api.tiles.mapbox.com/v4/{id}/{z}/{x}/{y}.png?access_token=p
 mymap.setView([54.1, 13.45], 13);
 
 
+function onMapClick(e) {
+    var lat=formatLonLatsDecimal(e.latlng.lat,"lat");
+    var lon=formatLonLatsDecimal(e.latlng.lng,"lon");
+    document.getElementById('mousePosLat').innerHTML=lat;
+    document.getElementById('mousePosLon').innerHTML=lon;
+}
+
+mymap.on('click',onMapClick);
+
 
 function updatePos(){
     var centerPoint=mymap.getContainerCenter();
@@ -114,4 +123,7 @@ function onMap(e){
 mymap.on('move',onMap);
 mymap.on('moveend',onMap);
 
+document.getElementById('testScroll').onclick=function(){
+  mymap._frame.scrollTop=400;
+};
 updatePos();

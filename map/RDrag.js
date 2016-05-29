@@ -1,7 +1,9 @@
 L.Map.RDrag= L.Map.Drag.extend({
     addHooks:function(){
+        console.log("adding our handler");
         L.Map.Drag.prototype.addHooks.call(this);
         var self=this;
+        this._aName="RDrag";
         this._draggable._onMove=function (e) {
             // Ignore simulated events, since we handle both touch and
             // mouse explicitly; otherwise we risk getting duplicates of
@@ -48,7 +50,7 @@ L.Map.RDrag= L.Map.Drag.extend({
             L.Util.cancelAnimFrame(this._animRequest);
             this._lastEvent = e;
             this._animRequest = L.Util.requestAnimFrame(this._updatePosition, this, true);
-        }.bind(this._draggable);
+        };
 
     }
 
