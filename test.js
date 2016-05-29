@@ -24,124 +24,26 @@ noUiSlider.create(range, {
 var valueDiv = document.getElementById('sliderRValue');
 var mapdiv=document.getElementById('mapid');
 
-function toRad(x){
-    return x/180*Math.PI;
-}
+var mymap = new L.RMap('mapid');
 
-var matrix=[1,0,0,1,0,0];
-var imatrix=[1,0,0,1,0,0];
+var mapRect=mapdiv.getBoundingClientRect();
+var center=document.getElementById("centerMarker");
+var left=mapRect.left+mapRect.width/2-10;
+var ctop=mapRect.top+mapRect.height/2-10;
+center.style.left=left+"px";
+center.style.top=ctop+"px";
+
 // When the slider value changes, update the input and span
 range.noUiSlider.on('update', function( values, handle ) {
     var v=values[handle];
     valueDiv.innerHTML = v;
-    var sin=Math.sin(toRad(v));
-    var cos=Math.cos(toRad(v));
-    matrix=[cos,sin,-sin,cos,0,0];
-    //inverse rotation (i.e. -v) - cos(-x)=cos(x), sin(-x)=-sin(x)
-    imatrix=[cos,-sin,sin,cos,0,0];
-    //mapdiv.style.transform='rotate('+v+'deg)';
-    mapdiv.style.transform='matrix('+matrix[0]+","+matrix[1]+","+matrix[2]+","+matrix[3]+","+matrix[4]+","+matrix[5]+")";
+    mymap.setRotation(v);
 });
 
-
-
-var mymap = L.map('mapid',{
-    dragging: false,
-    rdrag: true
+var check=document.getElementById('updateSvg');
+check.addEventListener('change',function(){
+   mymap.setSvg(check.checked);
 });
-var mapContainer=document.getElementById('mapContainer');
-
-function rotatePointInvers(point,center){
-    var start=new L.Point(point.x,point.y);
-    if (center){
-        start=start.subtract(center);
-    }
-    var rt=new L.Point(
-        start.x*imatrix[0]+start.y*imatrix[2]+0,
-        start.x*imatrix[1]+start.y*imatrix[3]+0
-    );
-    if (center){
-        rt=rt.add(center);
-    }
-    return rt;
-}
-
-//a bit dirty - we overwrite the translation between mouse event coordinates and the container
-//considering our translation
-mymap.mouseEventToContainerPoint=function (e) { // (MouseEvent)
-    var container=this._container;
-    if (!container) {
-        return new L.Point(e.clientX, e.clientY);
-    }
-
-    var rect = mapContainer.getBoundingClientRect();
-    var rt= new L.Point(
-        e.clientX - rect.left - container.clientLeft,
-        e.clientY - rect.top - container.clientTop);
-
-    var center=new L.point(
-        rect.width/2,
-        rect.height/2
-    );
-    rt=rotatePointInvers(rt,center);
-    return rt;
-};
-
-L.Map.RDrag= L.Map.Drag.extend({
-    addHooks:function(){
-        L.Map.Drag.prototype.addHooks.call(this);
-        this._draggable._onMove=function (e) {
-            // Ignore simulated events, since we handle both touch and
-            // mouse explicitly; otherwise we risk getting duplicates of
-            // touch events, see #4315.
-            if (e._simulated) { return; }
-
-            if (e.touches && e.touches.length > 1) {
-                this._moved = true;
-                return;
-            }
-
-            var first = (e.touches && e.touches.length === 1 ? e.touches[0] : e),
-                newPoint = new L.Point(first.clientX, first.clientY),
-                offset = newPoint.subtract(this._startPoint);
-            offset=rotatePointInvers(offset);
-
-            if (!offset.x && !offset.y) { return; }
-            if (Math.abs(offset.x) + Math.abs(offset.y) < 3) { return; }
-
-            L.DomEvent.preventDefault(e);
-
-            if (!this._moved) {
-                // @event dragstart: Event
-                // Fired when a drag starts
-                this.fire('dragstart');
-
-                this._moved = true;
-                this._startPos = L.DomUtil.getPosition(this._element).subtract(offset);
-
-                L.DomUtil.addClass(document.body, 'leaflet-dragging');
-
-                this._lastTarget = e.target || e.srcElement;
-                // IE and Edge do not give the <use> element, so fetch it
-                // if necessary
-                if ((window.SVGElementInstance) && (this._lastTarget instanceof SVGElementInstance)) {
-                    this._lastTarget = this._lastTarget.correspondingUseElement;
-                }
-                L.DomUtil.addClass(this._lastTarget, 'leaflet-drag-target');
-            }
-
-            this._newPos = this._startPos.add(offset);
-            this._moving = true;
-
-            L.Util.cancelAnimFrame(this._animRequest);
-            this._lastEvent = e;
-            this._animRequest = L.Util.requestAnimFrame(this._updatePosition, this, true);
-        }.bind(this._draggable);
-
-    }
-
-});
-mymap.addHandler("rdrag", L.Map.RDrag) ;
 
 L.tileLayer('https://api.tiles.mapbox.com/v4/{id}/{z}/{x}/{y}.png?access_token=pk.eyJ1IjoibWFwYm94IiwiYSI6ImNpandmbXliNDBjZWd2M2x6bDk3c2ZtOTkifQ._QA7i5Mpkd_m30IGElHziw', {
     maxZoom: 18,

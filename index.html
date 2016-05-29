@@ -4,36 +4,33 @@
     <meta charset="UTF-8">
     <title>Leaflet Test</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="http://cdn.leafletjs.com/leaflet/v0.7.7/leaflet.css" />
-    <link href="nouislider.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="lib/leaflet.css" />
+    <link href="lib/nouislider.min.css" rel="stylesheet">
     <style>
-        #container{
-            position: absolute;
-            top:0;
-            left:0;
-            right: 0;
-            bottom: 0;
-            background-color: lightgrey;
-        }
         #mapid{
             position: absolute;
             left:0;
             top:0;
             bottom:0;
             right: 0;
+            overflow: hidden;
+            background-color: lightgrey;
         }
-        #mapContainer{
-            position: relative;
-            width: 70%;
-            height: 60%;
-            margin: auto;
-            margin-top: 10%;
+        .leaflet-rmap-container{
+            position: absolute;
+        }
+        .leaflet-rmap-div{
+            position: absolute;
+            top:0;
+            left:0;
+            right: 0;
+            bottom: 0;
         }
         #sliderContainer{
             height: 20px;
-            width: 33%;
+            width: 60%;
             position: absolute;
-            left: 33%;
+            left: 20%;
             top: 5%;
             z-index: 9999;
         }
@@ -41,29 +38,43 @@
             background-color: green;
             display: inline-block;
             height: 100%;
-            width: 90%;
+            width: 70%;
         }
         #sliderRValue{
             width: 9%;
             display: inline-block;
             overflow: hidden;
+            margin-left: 1.5em;
+        }
+        #updateSvg{
+            display: inline-block;
+            margin-right: 1.5em;
+        }
+        #centerMarker{
+            z-index: 999;
+            position: absolute;
         }
     </style>
 </head>
 <body>
 <div id="container">
     <div id="sliderContainer">
+        <span>SVG</span><input type="checkbox" id="updateSvg" checked />
         <div id="sliderRotate"></div>
         <div id="sliderRValue"></div>
     </div>
-    <div id="mapContainer">
-        <div id="mapid" ></div>
+    <div id="mapid" >
+    <svg id="centerMarker" width="30" height="30">
+        <circle r="5" cx="10" cy="10" stroke="black" stroke-width="1"></circle>
+    </svg>
     </div>
 </div>
 
 <!--<script src="http://cdn.leafletjs.com/leaflet/v0.7.7/leaflet.js"></script>-->
-<script src="leaflet-src.js"></script>
-<script src="nouislider.min.js"></script>
+<script src="lib/leaflet-src.js"></script>
+<script src="lib/nouislider.min.js"></script>
+<script src="map/RDrag.js"></script>
+<script src="map/RMap.js"></script>
 <script src="test.js"></script>
 
 </body>
