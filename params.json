@@ -1,6 +1,0 @@
-{
-  "name": "Leaflet-test",
-  "tagline": "trying leaflet for avnav",
-  "body": "# leaflet-test\r\ntrying leaflet for avnav\r\n\r\nPlayground for trying leaflet.\r\n\r\n1. map rotation - rotate the map div by css transform and consider this in mouse coordinates\r\n\r\n2. sparse layers - show lower zoom level tiles when no higher level tiles are there\r\n\r\nTry it out: [here](index.html)\r\n",
-  "note": "Don't delete this file! It's used internally to help with page regeneration."
-}
