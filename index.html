@@ -18,6 +18,10 @@
         }
         .leaflet-rmap-container{
             position: absolute;
+            margin:0;
+            padding: 0;
+            border:0;
+            overflow: hidden;
         }
         .leaflet-rmap-div{
             position: absolute;
@@ -25,6 +29,10 @@
             left:0;
             right: 0;
             bottom: 0;
+            margin:0;
+            padding: 0;
+            border: 0;
+            overflow: hidden;
         }
         #sliderContainer{
             height: 20px;
@@ -51,8 +59,14 @@
             margin-right: 1.5em;
         }
         #centerMarker{
+            z-index: 998;
+            position: absolute;
+            pointer-events: none;
+        }
+        #clickMarker{
             z-index: 999;
             position: absolute;
+            pointer-events: none;
         }
         #positionDisplay{
             position: absolute;
@@ -75,11 +89,24 @@
             margin-right: 1em;
         }
         #testScroll{
+            display: none;
             position: absolute;
             z-index: 9999;
             left:1em;
             bottom: 1em;
             height: 60px;
+        }
+        #buttonContainer{
+            position: absolute;
+            left: 1em;
+            top: 1em;
+        }
+        #buttonContainer button{
+            font-size: 1.5em;
+            width: 2em;
+            height: 2em;
+            display: block;
+            margin-top: 0.3em;
         }
     </style>
 </head>
@@ -90,10 +117,15 @@
         <div id="sliderRotate"></div>
         <div id="sliderRValue"></div>
     </div>
-    <div id="mapid" >
-    <svg id="centerMarker" width="30" height="30">
-        <circle r="5" cx="10" cy="10" stroke="black" stroke-width="1"></circle>
-    </svg>
+    <div id="mapid">
+        <svg id="centerMarker" width="20" height="20">
+            <circle r="5" cx="10" cy="10" stroke="black" stroke-width="1"></circle>
+        </svg>
+        <svg id="clickMarker" width="20" height="20">
+            <line x1="10" y1="0" x2="10" y2="20" stroke="black" stroke-width="1"></line>
+            <line x1="0" y1="10" x2="20" y2="10" stroke="black" stroke-width="1"></line>
+        </svg>
+
     </div>
     <div id="positionDisplay">
         <span class="label">Center: Lat</span><span id="posLat" class="pos"></span>
@@ -104,6 +136,10 @@
         <span class="label">Lon</span><span id="mousePosLon" class="pos"></span>
     </div>
     <button id="testScroll">Scroll</button>
+    <div id="buttonContainer">
+        <button id="zoomIn">+</button>
+        <button id="zoomOut">-</button>
+    </div>
 </div>
 
 <!--<script src="http://cdn.leafletjs.com/leaflet/v0.7.7/leaflet.js"></script>-->

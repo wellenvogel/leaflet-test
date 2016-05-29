@@ -68,12 +68,6 @@ var mapdiv=document.getElementById('mapid');
 
 var mymap = new L.SMap('mapid');
 
-var mapRect=mapdiv.getBoundingClientRect();
-var center=document.getElementById("centerMarker");
-var left=mapRect.left+mapRect.width/2-10;
-var ctop=mapRect.top+mapRect.height/2-10;
-center.style.left=left+"px";
-center.style.top=ctop+"px";
 
 // When the slider value changes, update the input and span
 range.noUiSlider.on('update', function( values, handle ) {
@@ -86,6 +80,38 @@ var check=document.getElementById('updateSvg');
 check.addEventListener('change',function(){
    mymap.setSvg(check.checked);
 });
+
+var positions={};
+var offsets={};
+
+function updateElementPosition(element,offset){
+    var pos=positions[element];
+    if (! pos) return;
+    var el=document.getElementById(element);
+    if (! el) return;
+    var left=pos.x;
+    var top=pos.y;
+    if (! offset) offset=offsets[element];
+    if (offset){
+        left=left-offset.x;
+        top=top-offset.y;
+    }
+    positions[element]=new L.Point(left,top);
+    el.style.top=top+"px";
+    el.style.left=left+"px";
+};
+
+function setElementPosition(element,pos,offset) {
+    positions[element] = new L.Point(pos.x, pos.y);
+    updateElementPosition(element,offset);
+};
+
+
+offsets['centerMarker']=new L.Point(10,10);
+offsets['clickMarker']=new L.Point(10,10);
+setElementPosition('centerMarker',mymap.getFrameCenter());
+setElementPosition('clickMarker',mymap.getFrameCenter());
+
 
 L.tileLayer('https://api.tiles.mapbox.com/v4/{id}/{z}/{x}/{y}.png?access_token=pk.eyJ1IjoibWFwYm94IiwiYSI6ImNpandmbXliNDBjZWd2M2x6bDk3c2ZtOTkifQ._QA7i5Mpkd_m30IGElHziw', {
     maxZoom: 18,
@@ -105,18 +131,31 @@ function onMapClick(e) {
     var lon=formatLonLatsDecimal(e.latlng.lng,"lon");
     document.getElementById('mousePosLat').innerHTML=lat;
     document.getElementById('mousePosLon').innerHTML=lon;
+    setElementPosition('clickMarker',mymap.containerPointToFramePoint(e.containerPoint));
 }
 
 mymap.on('click',onMapClick);
 
 
 function updatePos(){
-    var centerPoint=mymap.getContainerCenter();
-    var centerPos=mymap.containerPointToLatLng(centerPoint);
-    var lat=formatLonLatsDecimal(centerPos.lat,"lat");
-    var lon=formatLonLatsDecimal(centerPos.lng,"lon");
-    document.getElementById('posLat').innerHTML=lat;
-    document.getElementById('posLon').innerHTML=lon;
+    var element;
+    ['clickMarker','centerMarker'].forEach(function(element) {
+        var pos = positions[element];
+        if (!pos) return;
+        var containerPoint = mymap.framePointToContainerPoint(pos);
+        var containerPos = mymap.containerPointToLatLng(containerPoint);
+        var lat = formatLonLatsDecimal(containerPos.lat, "lat");
+        var lon = formatLonLatsDecimal(containerPos.lng, "lon");
+        if (element == 'centerMarker') {
+            document.getElementById('posLat').innerHTML = lat;
+            document.getElementById('posLon').innerHTML = lon;
+        }
+        else {
+            document.getElementById('mousePosLat').innerHTML = lat;
+            document.getElementById('mousePosLon').innerHTML = lon;
+        }
+    });
+
 }
 function onMap(e){
     updatePos();
@@ -124,7 +163,16 @@ function onMap(e){
 mymap.on('move',onMap);
 mymap.on('moveend',onMap);
 
+/**
+ * test the scroll behavior
+ */
 document.getElementById('testScroll').onclick=function(){
   mymap._frame.scrollTop=400;
+};
+document.getElementById('zoomIn').onclick=function(){
+    mymap.zoomIn(1);
+};
+document.getElementById('zoomOut').onclick=function(){
+    mymap.zoomOut(1);
 };
 updatePos();
