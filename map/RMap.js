@@ -35,14 +35,16 @@ L.RMap=L.Map.extend({
             };
         }
         this.setSizes();
-        var dragging=options.dragging === undefined || options.dragging;
-        options.dragging=false; //we have to be a bit tricky: first disable loading of the original drag handler
         L.Map.prototype.initialize.call(this,this._rmapdiv,options);
         this._matrix=[1,0,0,1,0,0];
         this._imatrix=[1,0,0,1,0,0];
-        if (dragging){
-            this.options.dragging=true; //now enable loading of OUR draghandler
-            this.addHandler('dragging', L.Map.RDrag); //overwrite the original drag handler
+        var dragging=options.dragging === undefined || options.dragging;
+        var self=this;
+        //we should have a more "open" API to to that instead of deeply looking into L.Map.DragHandler
+        if (dragging && this.dragging){
+            this.dragging._draggable.on('predrag', function(){
+                self.dragging._draggable._newPos=self.rotatePointInvers(self.dragging._draggable._newPos,self.dragging._draggable._startPos);
+            });
         }
     },
     setSizes: function(){
