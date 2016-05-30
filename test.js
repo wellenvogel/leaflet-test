@@ -66,7 +66,7 @@ function formatLonLatsDecimal(coordinate,axis){
 var valueDiv = document.getElementById('sliderRValue');
 var mapdiv=document.getElementById('mapid');
 
-var mymap = new L.SMap('mapid');
+var mymap = new L.SMap('mapid',{scrollWheelZoom:'center'});
 var currentRotation=0;
 
 // When the slider value changes, update the input and span
@@ -83,11 +83,9 @@ check.addEventListener('change',function(){
    mymap.setSvg(check.checked);
 });
 
-var positions={};
 var offsets={};
-
-function updateElementPosition(element,offset){
-    var pos=positions[element];
+var clickPosition;
+function setElementPosition(element,pos,offset){
     if (! pos) return;
     var el=document.getElementById(element);
     if (! el) return;
@@ -98,15 +96,10 @@ function updateElementPosition(element,offset){
         left=left-offset.x;
         top=top-offset.y;
     }
-    positions[element]=new L.Point(left,top);
     el.style.top=top+"px";
     el.style.left=left+"px";
 };
 
-function setElementPosition(element,pos,offset) {
-    positions[element] = new L.Point(pos.x, pos.y);
-    updateElementPosition(element,offset);
-};
 
 
 offsets['centerMarker']=new L.Point(10,10);
@@ -121,6 +114,12 @@ L.tileLayer('https://api.tiles.mapbox.com/v4/{id}/{z}/{x}/{y}.png?access_token=p
     '<a href="http://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>, ' +
     'Imagery © <a href="http://mapbox.com">Mapbox</a>',
     id: 'mapbox.streets'
+}).addTo(mymap);
+
+
+L.tileLayer('http://t1.openseamap.org/seamark//{z}/{x}/{y}.png', {
+        maxZoom: 18,
+        attribution: 'Map data &copy; <a href="http://openseamap.org">OpenSeamaptMap</a>'
 }).addTo(mymap);
 
 
@@ -158,10 +157,12 @@ function updatePopUps(){
         popup.style[L.DomUtil.TRANSFORM]=oldTransform+" rotate("+rotation+"deg)";
     };
 };
+var clickMarker=document.getElementById('clickMarker');
 
 function onMapClick(e) {
     var lat=formatLonLatsDecimal(e.latlng.lat,"lat");
     var lon=formatLonLatsDecimal(e.latlng.lng,"lon");
+    clickPosition= e.latlng;
     document.getElementById('mousePosLat').innerHTML=lat;
     document.getElementById('mousePosLon').innerHTML=lon;
     setElementPosition('clickMarker',mymap.containerPointToFramePoint(e.containerPoint));
@@ -176,31 +177,40 @@ mymap.on('click',onMapClick);
 
 
 function updatePos(){
-    var element;
-    ['clickMarker','centerMarker'].forEach(function(element) {
-        var pos = positions[element];
-        if (!pos) return;
-        var containerPoint = mymap.framePointToContainerPoint(pos);
-        var containerPos = mymap.containerPointToLatLng(containerPoint);
-        var lat = formatLonLatsDecimal(containerPos.lat, "lat");
-        var lon = formatLonLatsDecimal(containerPos.lng, "lon");
-        if (element == 'centerMarker') {
-            document.getElementById('posLat').innerHTML = lat;
-            document.getElementById('posLon').innerHTML = lon;
-        }
-        else {
-            document.getElementById('mousePosLat').innerHTML = lat;
-            document.getElementById('mousePosLon').innerHTML = lon;
-        }
-    });
-
+    var containerPoint = mymap.framePointToContainerPoint(mymap.getFrameCenter());
+    var containerPos = mymap.containerPointToLatLng(containerPoint);
+    var lat = formatLonLatsDecimal(containerPos.lat, "lat");
+    var lon = formatLonLatsDecimal(containerPos.lng, "lon");
+    document.getElementById('posLat').innerHTML = lat;
+    document.getElementById('posLon').innerHTML = lon;
+    if (clickPosition) {
+        containerPoint=mymap.latLngToContainerPoint(clickPosition);
+        var framePoint=mymap.containerPointToFramePoint(containerPoint);
+        setElementPosition('clickMarker',framePoint);
+    }
 }
 function onMap(e){
     updatePos();
 }
+mymap.on('zoomanim',function(e){
+    onMap(e);
+    return;
+
+    //test alternative
+    var x=e;
+    var frameCenter=mymap.containerPointToFramePoint(mymap.layerPointToContainerPoint(e.origin),false);
+    var oldFramepoint=mymap.containerPointToFramePoint(mymap.latLngToContainerPoint(clickPosition),false);
+    var diff=oldFramepoint.subtract(frameCenter);
+    diff=diff.multiplyBy(e.scale);
+    var newFramepoint=frameCenter.add(diff);
+    setElementPosition('clickMarker',newFramepoint);
+});
 mymap.on('move',onMap);
 mymap.on('moveend',onMap);
-mymap.on('zoomend',updatePopUps);
+mymap.on('zoomend',function(){
+    updatePopUps();
+    updatePos();
+});
 
 /**
  * test the scroll behavior

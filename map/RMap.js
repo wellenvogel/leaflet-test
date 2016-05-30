@@ -38,6 +38,7 @@ L.RMap=L.Map.extend({
         L.Map.prototype.initialize.call(this,this._rmapdiv,options);
         this._matrix=[1,0,0,1,0,0];
         this._imatrix=[1,0,0,1,0,0];
+        this._currentRotation=0; //rotation in deg
         var dragging=options.dragging === undefined || options.dragging;
         var self=this;
         //we should have a more "open" API to to that instead of deeply looking into L.Map.DragHandler
@@ -46,6 +47,21 @@ L.RMap=L.Map.extend({
                 self.dragging._draggable._newPos=self.rotatePointInvers(self.dragging._draggable._newPos,self.dragging._draggable._startPos);
             });
         }
+        this.on('zoomanim',this._rzoomAnim);
+        this.on('zoomend',this._rzoomEnd);
+        this._zoomParameter=undefined;
+    },
+    _rzoomAnim:function(e){
+      this._zoomParameter={
+          scale: e.scale,
+          center: this.containerPointToFramePoint(this.layerPointToContainerPoint(e.origin).clone(),false)
+      }
+    },
+    _rzoomEnd: function(e){
+      this._zoomParameter=undefined;
+    },
+    remove: function(){
+        this.__super__.remove()
     },
     setSizes: function(){
         var rect=this._frame.getBoundingClientRect();
@@ -88,8 +104,13 @@ L.RMap=L.Map.extend({
     toRad: function(x){
     return x/180*Math.PI;
     },
+    /**
+     *
+     * @param {number} rot rotation in degrees
+     */
     setRotation:function(rot){
         if (! this._rmapdiv) return;
+        this._currentRotation=parseInt(rot);
         var sin=Math.sin(this.toRad(rot));
         var cos=Math.cos(this.toRad(rot));
         this._matrix=[cos,sin,-sin,cos,0,0];
@@ -104,6 +125,18 @@ L.RMap=L.Map.extend({
         this._rmapdiv.style.transform=str;
         this.fire('moveend');
     },
+    /**
+     * return the current rotation in degrees
+     * @returns {number|Number|*}
+     */
+    getRotation:function(){
+        return this._currentRotation;
+    },
+    /**
+     * overloaded function from the map, consider rotation
+     * @param e
+     * @returns {*}
+     */
     mouseEventToContainerPoint: function (e) { // (MouseEvent)
         var rect = this._frame.getBoundingClientRect();
         var fpoint = new L.Point(
@@ -131,9 +164,10 @@ L.RMap=L.Map.extend({
      * convert a point from the map container to a point on the surrounding frame
      * this considers the rotation
      * @param point
+     * @param {boolean|undefined} considerAnimation if set to false ignore zoom animation scale
      * @returns {*}
      */
-    containerPointToFramePoint:function(point){
+    containerPointToFramePoint:function(point,considerAnimation){
         var opoint=new L.Point(point.x,point.y);
         if (this._container) {
             opoint=opoint.add(new L.Point(this._container.clientLeft, this._container.clientTop))
@@ -143,14 +177,24 @@ L.RMap=L.Map.extend({
             this._rsize / 2
         );
         var unrotated=this.rotatePoint(opoint,center);
-        return this._rmapToFrame(unrotated);
+        var rt=this._rmapToFrame(unrotated);
+        if (! this._zoomParameter || (considerAnimation === false)){
+            return rt;
+        }
+        rt=rt.subtract(this._zoomParameter.center).multiplyBy(this._zoomParameter.scale).add(this._zoomParameter.center);
+        return rt;
     },
     /**
      * convert a point on the frame to a point on the map container
      * @param point
-     * @returns {*}
+     * @param {boolean|undefined} considerAnimation if set to false ignore zoom animation scale
+     * @returns {point}
      */
-    framePointToContainerPoint:function(point){
+    framePointToContainerPoint:function(point,considerAnimation){
+        var ipoint=point;
+        if (this._zoomParameter && (considerAnimation === undefined || considerAnimation )){
+            ipoint=ipoint.subtract(this._zoomParameter.center).divideBy(this._zoomParameter.scale).add(this._zoomParameter.center);
+        }
         var rpoint=this._frameToRmap(point);
         var center = new L.point(
             this._rsize / 2,
