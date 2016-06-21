@@ -177,14 +177,13 @@ mymap.on('click',onMapClick);
 
 
 function updatePos(){
-    var containerPoint = mymap.framePointToContainerPoint(mymap.getFrameCenter());
-    var containerPos = mymap.containerPointToLatLng(containerPoint);
+    var containerPos = mymap.getCenterWithAnim();
     var lat = formatLonLatsDecimal(containerPos.lat, "lat");
     var lon = formatLonLatsDecimal(containerPos.lng, "lon");
     document.getElementById('posLat').innerHTML = lat;
     document.getElementById('posLon').innerHTML = lon;
     if (clickPosition) {
-        containerPoint=mymap.latLngToContainerPoint(clickPosition);
+        var containerPoint=mymap.layerPointToContainerPoint(mymap.latLngToLayerWithAnim(clickPosition));
         var framePoint=mymap.containerPointToFramePoint(containerPoint);
         setElementPosition('clickMarker',framePoint);
     }
@@ -198,8 +197,8 @@ mymap.on('zoomanim',function(e){
 
     //test alternative
     var x=e;
-    var frameCenter=mymap.containerPointToFramePoint(mymap.layerPointToContainerPoint(e.origin),false);
-    var oldFramepoint=mymap.containerPointToFramePoint(mymap.latLngToContainerPoint(clickPosition),false);
+    var frameCenter=mymap.containerPointToFramePoint(mymap.layerPointToContainerPoint(e.origin));
+    var oldFramepoint=mymap.containerPointToFramePoint(mymap.latLngToContainerPoint(clickPosition));
     var diff=oldFramepoint.subtract(frameCenter);
     diff=diff.multiplyBy(e.scale);
     var newFramepoint=frameCenter.add(diff);

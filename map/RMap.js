@@ -47,15 +47,21 @@ L.RMap=L.Map.extend({
                 self.dragging._draggable._newPos=self.rotatePointInvers(self.dragging._draggable._newPos,self.dragging._draggable._startPos);
             });
         }
-        this.on('zoomanim',this._rzoomAnim);
-        this.on('zoomend',this._rzoomEnd);
+        if (options.animate || options.animate === undefined) {
+            this.on('zoomanim', this._rzoomAnim);
+            this.on('zoomend', this._rzoomEnd);
+        }
         this._zoomParameter=undefined;
     },
     _rzoomAnim:function(e){
       this._zoomParameter={
           scale: e.scale,
-          center: this.containerPointToFramePoint(this.layerPointToContainerPoint(e.origin).clone(),false)
-      }
+          delta: e.delta? e.delta.clone():new L.Point(0,0),
+          origin: e.origin.clone(),
+          zoom: e.zoom,
+          center: e.center
+      };
+
     },
     _rzoomEnd: function(e){
       this._zoomParameter=undefined;
@@ -164,10 +170,9 @@ L.RMap=L.Map.extend({
      * convert a point from the map container to a point on the surrounding frame
      * this considers the rotation
      * @param point
-     * @param {boolean|undefined} considerAnimation if set to false ignore zoom animation scale
      * @returns {*}
      */
-    containerPointToFramePoint:function(point,considerAnimation){
+    containerPointToFramePoint: function (point){
         var opoint=new L.Point(point.x,point.y);
         if (this._container) {
             opoint=opoint.add(new L.Point(this._container.clientLeft, this._container.clientTop))
@@ -178,23 +183,15 @@ L.RMap=L.Map.extend({
         );
         var unrotated=this.rotatePoint(opoint,center);
         var rt=this._rmapToFrame(unrotated);
-        if (! this._zoomParameter || (considerAnimation === false)){
-            return rt;
-        }
-        rt=rt.subtract(this._zoomParameter.center).multiplyBy(this._zoomParameter.scale).add(this._zoomParameter.center);
         return rt;
     },
     /**
      * convert a point on the frame to a point on the map container
      * @param point
-     * @param {boolean|undefined} considerAnimation if set to false ignore zoom animation scale
      * @returns {point}
      */
-    framePointToContainerPoint:function(point,considerAnimation){
+    framePointToContainerPoint: function (point){
         var ipoint=point;
-        if (this._zoomParameter && (considerAnimation === undefined || considerAnimation )){
-            ipoint=ipoint.subtract(this._zoomParameter.center).divideBy(this._zoomParameter.scale).add(this._zoomParameter.center);
-        }
         var rpoint=this._frameToRmap(point);
         var center = new L.point(
             this._rsize / 2,
@@ -205,5 +202,15 @@ L.RMap=L.Map.extend({
             return rotated.subtract(new L.Point(this._container.clientLeft,this._container.clientTop));
         }
         return rotated;
+    },
+
+    latLngToLayerWithAnim:function(ll){
+        if (! this._zoomParameter) return this.latLngToLayerPoint(ll);
+        else return this._latLngToNewLayerPoint(ll,this._zoomParameter.zoom,this._zoomParameter.center);
+    },
+
+    getCenterWithAnim: function(){
+        if (this._zoomParameter) return this._zoomParameter.center;
+        return this.getCenter();
     }
 });
