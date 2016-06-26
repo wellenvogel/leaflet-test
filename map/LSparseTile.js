@@ -34,7 +34,8 @@ L.TileLayer.SparseTile = TL.extend({
     options: {
         zoomLayerBoundings: null,
         upZoom: false,
-        transform: true
+        transform: true,
+        shiftZoom: 0
     },
 
     initialize: function (urlTemplate, options) {
@@ -45,10 +46,19 @@ L.TileLayer.SparseTile = TL.extend({
     /**
      * find a tile that is available considering zoomLayerBoundings
      * if it is not found - just try lower zoom level
+     * TODO
      * @param tilePoint
      * @returns {*} the new tilePoint to be used
      */
     findTile: function(tilePoint){
+        if (tilePoint.x%2 == 0) return undefined;
+        if (this.options.shiftZoom){
+            return {
+                x: Math.floor(tilePoint.x/Math.pow(2,this.options.shiftZoom)),
+                y: Math.floor(tilePoint.y/Math.pow(2,this.options.shiftZoom)),
+                z: tilePoint.z-this.options.shiftZoom
+            }
+        }
         if (! this.options.upZoom ) return tilePoint;
         return {
             x: Math.floor(tilePoint.x/4),
@@ -60,7 +70,12 @@ L.TileLayer.SparseTile = TL.extend({
     _loadTile: function (tile, tilePoint) {
         tilePoint.z=this._map.getZoom()+this.options.zoomOffset;
         var tileSize=this._getTileSize();
+        tile._layer  = this;
         var newTilePoint=this.findTile(tilePoint);
+        if (newTilePoint === undefined){
+            this._tileOnError.call(tile);
+            return;
+        }
         var offsetX= 0,offsetY= 0;
         if (newTilePoint.z < tilePoint.z){
             var factor=Math.pow(2,tilePoint.z-newTilePoint.z);
@@ -112,7 +127,6 @@ L.TileLayer.SparseTile = TL.extend({
                 }
             }
         }
-        tile._layer  = this;
         tile.onload  = this._tileOnLoad;
         tile.onerror = this._tileOnError;
         tile.src     = this.getTileUrl(newTilePoint);

@@ -87,7 +87,7 @@ var upZoom=document.getElementById('upZoom');
 if (upZoom){
     upZoom.addEventListener('change', function(){
        mymap.eachLayer(function(layer){
-           layer.setUpZoom(upZoom.checked);
+           if (layer.setUpZoom) layer.setUpZoom(upZoom.checked);
        })
     });
 }
@@ -117,6 +117,35 @@ setElementPosition('centerMarker',mymap.getFrameCenter());
 setElementPosition('clickMarker',mymap.getFrameCenter());
 
 
+L.tileLayer('https://api.tiles.mapbox.com/v4/{id}/{z}/{x}/{y}.png?access_token=pk.eyJ1IjoibWFwYm94IiwiYSI6ImNpandmbXliNDBjZWd2M2x6bDk3c2ZtOTkifQ._QA7i5Mpkd_m30IGElHziw', {
+    maxZoom: 18,
+    attribution: 'Map data &copy; <a href="http://openstreetmap.org">OpenStreetMap</a> contributors, ' +
+    '<a href="http://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>, ' +
+    'Imagery © <a href="http://mapbox.com">Mapbox</a>',
+    id: 'mapbox.streets',
+    zoomOffset: -3,
+    tileSize: 2048
+}).addTo(mymap);
+L.tileLayer('https://api.tiles.mapbox.com/v4/{id}/{z}/{x}/{y}.png?access_token=pk.eyJ1IjoibWFwYm94IiwiYSI6ImNpandmbXliNDBjZWd2M2x6bDk3c2ZtOTkifQ._QA7i5Mpkd_m30IGElHziw', {
+    maxZoom: 18,
+    attribution: 'Map data &copy; <a href="http://openstreetmap.org">OpenStreetMap</a> contributors, ' +
+    '<a href="http://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>, ' +
+    'Imagery © <a href="http://mapbox.com">Mapbox</a>',
+    id: 'mapbox.streets',
+    zoomOffset: -2,
+    tileSize: 1024
+}).addTo(mymap);
+L.tileLayer('https://api.tiles.mapbox.com/v4/{id}/{z}/{x}/{y}.png?access_token=pk.eyJ1IjoibWFwYm94IiwiYSI6ImNpandmbXliNDBjZWd2M2x6bDk3c2ZtOTkifQ._QA7i5Mpkd_m30IGElHziw', {
+    maxZoom: 18,
+    attribution: 'Map data &copy; <a href="http://openstreetmap.org">OpenStreetMap</a> contributors, ' +
+    '<a href="http://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>, ' +
+    'Imagery © <a href="http://mapbox.com">Mapbox</a>',
+    id: 'mapbox.streets',
+    zoomOffset: -1,
+    tileSize: 512
+}).addTo(mymap);
+
+
 L.tileLayer.sparseTile('https://api.tiles.mapbox.com/v4/{id}/{z}/{x}/{y}.png?access_token=pk.eyJ1IjoibWFwYm94IiwiYSI6ImNpandmbXliNDBjZWd2M2x6bDk3c2ZtOTkifQ._QA7i5Mpkd_m30IGElHziw', {
     maxZoom: 18,
     attribution: 'Map data &copy; <a href="http://openstreetmap.org">OpenStreetMap</a> contributors, ' +
@@ -126,7 +155,7 @@ L.tileLayer.sparseTile('https://api.tiles.mapbox.com/v4/{id}/{z}/{x}/{y}.png?acc
 }).addTo(mymap);
 
 
-L.tileLayer.sparseTile('http://t1.openseamap.org/seamark//{z}/{x}/{y}.png', {
+L.tileLayer('http://t1.openseamap.org/seamark//{z}/{x}/{y}.png', {
         maxZoom: 18,
         attribution: 'Map data &copy; <a href="http://openseamap.org">OpenSeamaptMap</a>'
 }).addTo(mymap);
