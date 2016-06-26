@@ -51,7 +51,7 @@ L.TileLayer.SparseTile = TL.extend({
      * @returns {*} the new tilePoint to be used
      */
     findTile: function(tilePoint){
-        if (tilePoint.x%2 == 0) return undefined;
+        if (tilePoint.x%2 == 0) return undefined; //TEST....
         if (this.options.shiftZoom){
             return {
                 x: Math.floor(tilePoint.x/Math.pow(2,this.options.shiftZoom)),
