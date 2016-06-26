@@ -83,6 +83,15 @@ check.addEventListener('change',function(){
    mymap.setSvg(check.checked);
 });
 
+var upZoom=document.getElementById('upZoom');
+if (upZoom){
+    upZoom.addEventListener('change', function(){
+       mymap.eachLayer(function(layer){
+           layer.setUpZoom(upZoom.checked);
+       })
+    });
+}
+
 var offsets={};
 var clickPosition;
 function setElementPosition(element,pos,offset){

@@ -3,9 +3,27 @@
  * inspired by https://github.com/ghybs/Leaflet.TileLayer.Fallback/blob/master/leaflet.tilelayer.fallback-src.js
  */
 
-var TL = L.TileLayer.Canvas,
+var TL = L.TileLayer,
     TLproto = TL.prototype;
 
+//we must overwrite set position to keep our scaling being set
+L.DomUtil.setPosition=function (el, point, disable3D) { // (HTMLElement, Point[, Boolean])
+    // jshint camelcase: false
+    el._leaflet_pos = point;
+
+    if (!disable3D && L.Browser.any3d) {
+        var oldTranslate=el.style[L.DomUtil.TRANSFORM];
+        var newTranslate=L.DomUtil.getTranslateString(point);
+        if (oldTranslate && oldTranslate.match(/scale/)){
+            oldTranslate=oldTranslate.replace(/.*scale *\(/,"scale(").replace(/\).*/,'');
+            newTranslate+=" "+oldTranslate;
+        }
+        el.style[L.DomUtil.TRANSFORM] =  newTranslate;
+    } else {
+        el.style.left = point.x + 'px';
+        el.style.top = point.y + 'px';
+    }
+};
 
 L.TileLayer.SparseTile = TL.extend({
 
@@ -14,14 +32,14 @@ L.TileLayer.SparseTile = TL.extend({
     },
 
     options: {
-        zoomLayerBoundings: null
+        zoomLayerBoundings: null,
+        upZoom: false,
+        transform: true
     },
 
     initialize: function (urlTemplate, options) {
         if (! options) options={};
-        options.async=true;
-        //we need to call the TileLayer proto here directly as Canvas does not forward...
-        L.TileLayer.prototype.initialize.call(this,urlTemplate,options);
+        TLproto.initialize.call(this,urlTemplate,options);
     },
 
     /**
@@ -31,45 +49,86 @@ L.TileLayer.SparseTile = TL.extend({
      * @returns {*} the new tilePoint to be used
      */
     findTile: function(tilePoint){
-        return tilePoint;
+        if (! this.options.upZoom ) return tilePoint;
+        return {
+            x: Math.floor(tilePoint.x/4),
+            y: Math.floor(tilePoint.y/4),
+            z: tilePoint.z-2
+        };
     },
 
-    drawTile: function(tile,tilePoint,zoom){
-        tilePoint.z=zoom;
+    _loadTile: function (tile, tilePoint) {
+        tilePoint.z=this._map.getZoom()+this.options.zoomOffset;
         var tileSize=this._getTileSize();
         var newTilePoint=this.findTile(tilePoint);
-        var offsetX= 0,offsetY= 0,sWidth=tileSize,sHeight=tileSize;
-        var url=this.getTileUrl(tilePoint);
+        var offsetX= 0,offsetY= 0;
         if (newTilePoint.z < tilePoint.z){
-            var factor=Math.pow(2,oldZoom-newTilePoint.z);
-            var fract=this.tileSize/factor;
+            var factor=Math.pow(2,tilePoint.z-newTilePoint.z);
             var xdiff=tilePoint.x-newTilePoint.x*factor;
             var ydiff=tilePoint.y-newTilePoint.y*factor;
-            if (xdiff >= 0 && ydiff >= 0){
-                sWidth=tileSize/factor;
-                sHeight=tileSize/factor;
-                offsetX=xdiff*fract;
-                offsetY=ydiff*fract;
-                url=this.getTileUrl(newTilePoint);
+            if (this.options.transform) {
+                //implementation using scale
+                //seems to be much faster on old webkit
+                if (xdiff >= 0 && ydiff >= 0) {
+                    tile.style.width = tile.style.height=tileSize+"px";
+                    offsetX = xdiff * tileSize / factor;
+                    offsetY = ydiff * tileSize / factor;
+
+                    // Compute margins to adjust position.
+                    tile.style.marginTop = (-offsetY*factor) + 'px';
+                    tile.style.marginLeft = (-offsetX*factor) + 'px';
+
+                    // Crop (clip) image.
+                    // `clip` is deprecated, but browsers support for `clip-path: inset()` is far behind.
+                    // http://caniuse.com/#feat=css-clip-path
+                    // add 1px to the clipping region to avoid some strange borders on old webkit
+                    tile.style.clip = 'rect(' + offsetY + 'px ' + (offsetX + tileSize/factor+1) + 'px ' + (offsetY + tileSize/factor+1) + 'px ' + offsetX + 'px)';
+                    tile.style.webkitTransformOrigin="left top";
+                    tile.style.transformOrigin = "left top";
+                    var oldTransform= tile.style[L.DomUtil.TRANSFORM];
+                    var newTransform="scale(" + factor + ")";
+                    if (oldTransform && oldTransform != ""){
+                        newTransform=oldTransform.replace(/scale.*\)/,"")+" "+newTransform;
+                    }
+                    tile.style[L.DomUtil.TRANSFORM]=newTransform;
+                }
+            }
+            else {
+                if (xdiff >= 0 && ydiff >= 0) {
+                    offsetX = xdiff * tileSize;
+                    offsetY = ydiff * tileSize;
+                    // Zoom replacement img.
+                    tile.style.width = tile.style.height = (tileSize * factor) + 'px';
+
+                    // Compute margins to adjust position.
+                    tile.style.marginTop = (-offsetY) + 'px';
+                    tile.style.marginLeft = (-offsetX) + 'px';
+
+                    // Crop (clip) image.
+                    // `clip` is deprecated, but browsers support for `clip-path: inset()` is far behind.
+                    // http://caniuse.com/#feat=css-clip-path
+                    tile.style.clip = 'rect(' + offsetY + 'px ' + (offsetX + tileSize) + 'px ' + (offsetY + tileSize) + 'px ' + offsetX + 'px)';
+
+                }
             }
         }
-        var i=new Image();
-        var self=this;
-        var currentTile=tile;
-        i.onload=function(){
-            var ctx=tile.getContext("2d");
-            ctx.drawImage(i,0,0,tileSize,tileSize,offsetX,offsetY,sWidth,sHeight);
-            self.tileDrawn(currentTile);
-        };
-        i.onerror=function(e){
-          self.tileError(currentTile,e)
-        };
-        i.src=url;
-    },
+        tile._layer  = this;
+        tile.onload  = this._tileOnLoad;
+        tile.onerror = this._tileOnError;
+        tile.src     = this.getTileUrl(newTilePoint);
 
-    tileError: function(tile){
-        this._tileOnError.call(tile);
+        this.fire('tileloadstart', {
+            tile: tile,
+            url: tile.src
+        });
+    },
+    setUpZoom: function(v){
+        this.options.upZoom=v;
+        this.redraw();
     }
+
+
+
 });
 
 L.tileLayer.sparseTile=function(url,options){
