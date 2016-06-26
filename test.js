@@ -116,7 +116,7 @@ offsets['clickMarker']=new L.Point(10,10);
 setElementPosition('centerMarker',mymap.getFrameCenter());
 setElementPosition('clickMarker',mymap.getFrameCenter());
 
-
+/*
 L.tileLayer('https://api.tiles.mapbox.com/v4/{id}/{z}/{x}/{y}.png?access_token=pk.eyJ1IjoibWFwYm94IiwiYSI6ImNpandmbXliNDBjZWd2M2x6bDk3c2ZtOTkifQ._QA7i5Mpkd_m30IGElHziw', {
     maxZoom: 18,
     attribution: 'Map data &copy; <a href="http://openstreetmap.org">OpenStreetMap</a> contributors, ' +
@@ -159,7 +159,7 @@ L.tileLayer('http://t1.openseamap.org/seamark//{z}/{x}/{y}.png', {
         maxZoom: 18,
         attribution: 'Map data &copy; <a href="http://openseamap.org">OpenSeamaptMap</a>'
 }).addTo(mymap);
-
+*/
 
 
 mymap.setView([54.1, 13.45], 13);
@@ -262,3 +262,164 @@ document.getElementById('zoomOut').onclick=function(){
     mymap.zoomOut(1);
 };
 updatePos();
+
+function e2f(elem,attr){
+    return parseFloat($(elem).attr(attr));
+};
+
+
+function parseLayerlist(layerdata, baseurl) {
+    var ll = [];
+    $(layerdata).find('TileMap').each(function (ln, tm) {
+        var rt = {};
+        //complete tile map entry here
+        rt.inversy = false;
+        var layer_profile = $(tm).attr('profile');
+        if (layer_profile) {
+            if (layer_profile != 'global-mercator' && layer_profile != 'zxy-mercator' && layer_profile != 'wms') {
+                alert('unsupported profile in tilemap.xml ' + layer_profile);
+                return null;
+            }
+            if (layer_profile == 'global-mercator') {
+                //our very old style stuff where we had y=0 at lower left
+                rt.inversy = true;
+            }
+        }
+        rt.url = $(tm).attr('href');
+        rt.title = $(tm).attr('title');
+        rt.minZoom = parseInt($(tm).attr('minzoom'));
+        rt.maxZoom = parseInt($(tm).attr('maxzoom'));
+        rt.projection = $(tm).attr('projection'); //currently only for WMS
+        //we store the layer region in EPSG:4326
+        $(tm).find(">BoundingBox").each(function (nr, bb) {
+            rt.layerExtent = [e2f(bb, 'minlon'), e2f(bb, 'maxlat'),
+                e2f(bb, 'maxlon'), e2f(bb, 'minlat')];
+        });
+
+        //although we currently do not need the boundings
+        //we just parse them...
+        var boundings = [];
+        $(tm).find(">LayerBoundings >BoundingBox").each(function (nr, bb) {
+            var bounds = [e2f(bb, 'minlon'), e2f(bb, 'maxlat'),
+                e2f(bb, 'maxlon'), e2f(bb, 'minlat')];
+            boundings.push(bounds);
+        });
+        rt.boundings = boundings;
+
+        var zoomLayerBoundings = [];
+        $(tm).find(">LayerZoomBoundings >ZoomBoundings").each(function (nr, zb) {
+            var zoom = parseInt($(zb).attr('zoom'));
+            var zoomBoundings = [];
+            $(zb).find(">BoundingBox").each(function (nr, bb) {
+                var bounds = {
+                    minx: parseInt($(bb).attr('minx')),
+                    miny: parseInt($(bb).attr('miny')),
+                    maxx: parseInt($(bb).attr('maxx')),
+                    maxy: parseInt($(bb).attr('maxy'))
+                };
+                zoomBoundings.push(bounds);
+            });
+            if (zoomBoundings.length) {
+                zoomLayerBoundings[zoom] = zoomBoundings;
+            }
+        });
+        if (zoomLayerBoundings.length) {
+            rt.zoomLayerBoundings = zoomLayerBoundings;
+        }
+
+        //now we have all our options - just create the layer from them
+        var layerurl = "";
+        if (rt.url === undefined) {
+            alert("missing href in layer");
+            return null;
+        }
+        if (!rt.url.match(/^https*:/)) {
+            layerurl = baseurl + "/" + rt.url;
+        }
+        else layerurl = rt.url;
+        //rt.extent = ol.extent.applyTransform(rt.layerExtent, self.transformToMap); TODO: transform to map
+        if (rt.wms) {
+            var param = {};
+            $(tm).find(">WMSParameter").each(function (nr, wp) {
+                var n = $(wp).attr('name');
+                var v = $(wp).attr('value');
+                if (n !== undefined && v !== undefined) {
+                    param[n] = v;
+                }
+            });
+            rt.wmsparam = param;
+            var layermap = {};
+            $(tm).find(">WMSLayerMapping").each(function (nr, mapping) {
+                var zooms = $(mapping).attr('zooms');
+                var layers = $(mapping).attr('layers');
+                var zarr = zooms.split(/,/);
+                var i;
+                for (i in zarr) {
+                    try {
+                        var zlevel = parseInt(zarr[i]);
+                        layermap[zlevel] = layers;
+                    } catch (ex) {
+                    }
+                }
+            });
+            rt.wmslayermap = layermap;
+
+        }
+        ll.push(rt);
+    });
+    return ll;
+}
+
+function addMapLayers(xml,baseUrl){
+    var ll=parseLayerlist(xml,baseUrl);
+    ll.forEach(function(layer){
+        var lLayer= L.tileLayer.sparseTile(layer.url+"/{z}/{x}/{y}.png",{
+           zoomLayerBoundings:layer.zoomLayerBoundings,
+           maxZoom:layer.maxzoom
+        });
+        lLayer.addTo(mymap);
+    });
+}
+
+var chartlist=null;
+
+function showChart(num){
+    if (chartlist == null || chartlist[num] === undefined) {
+        alert("unknown chart");
+        return;
+    }
+    var url=("/"+chartlist[num].url+"/avnav.xml").replace(/^\/\/*/,"/");
+    var baseUrl=chartlist[num].url;
+    $.ajax({
+        url:url,
+        dataType: 'xml',
+        cache: false,
+        success: function(data){
+            $('#selectPage').hide();
+            $('#container').show();
+            addMapLayers(data,baseUrl);
+        },
+        error: function(e){
+            alert("unable to get chart details: "+ e.statusText);
+        }
+    });
+    return false;
+}
+$(window).on('load',function(){
+    $.ajax({
+        url:"/viewer/avnav_navi.php?request=listCharts",
+        success: function(data){
+            var i;
+            chartlist=data.data;
+            var html="";
+            for (i=0;i<data.data.length;i++){
+                var entry=data.data[i];
+                html+="<a  onclick=\"showChart("+i+")\">"+entry.name+"</a><br>"
+            }
+            $('#selectPage').html(html);
+        },
+        error: function(e){
+            alert("cannot load charts: "+ e.statusText);
+        }
+    });
+});
