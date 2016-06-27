@@ -69,19 +69,13 @@ var mapdiv=document.getElementById('mapid');
 var mymap = new L.SMap('mapid',{scrollWheelZoom:'center'});
 var currentRotation=0;
 
-// When the slider value changes, update the input and span
-range.noUiSlider.on('update', function( values, handle ) {
-    var v=values[handle];
-    valueDiv.innerHTML = v;
-    currentRotation=v;
-    mymap.setRotation(v);
-    updatePopUps();
-});
+
 
 var check=document.getElementById('updateSvg');
 check.addEventListener('change',function(){
    mymap.setSvg(check.checked);
 });
+var panZoomWa=document.getElementById('panZoomWa');
 
 var offsets={};
 var clickPosition;
@@ -125,6 +119,15 @@ L.tileLayer('http://t1.openseamap.org/seamark//{z}/{x}/{y}.png', {
 
 
 mymap.setView([54.1, 13.45], 13);
+// When the slider value changes, update the input and span
+range.noUiSlider.on('update', function( values, handle ) {
+    var v=values[handle];
+    valueDiv.innerHTML = v;
+    currentRotation=v;
+    mymap.setRotation(v);
+    updatePopUps();
+});
+
 /**
  * really experimental support for rotating popUps
  * must be called after a popup has been created and on each rotation
@@ -183,7 +186,11 @@ function updatePos(){
     document.getElementById('posLat').innerHTML = lat;
     document.getElementById('posLon').innerHTML = lon;
     if (clickPosition) {
-        var containerPoint=mymap.layerPointToContainerPoint(mymap.latLngToLayerWithAnim(clickPosition));
+        var containerPoint;
+        if (panZoomWa === undefined || panZoomWa.checked)
+            containerPoint=mymap.layerPointToContainerPoint(mymap.latLngToLayerWithAnim(clickPosition));
+        else
+            containerPoint=mymap.layerPointToContainerPoint(mymap.latLngToLayerPoint(clickPosition));
         var framePoint=mymap.containerPointToFramePoint(containerPoint);
         setElementPosition('clickMarker',framePoint);
     }

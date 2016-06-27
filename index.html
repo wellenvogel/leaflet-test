@@ -128,6 +128,7 @@
 <div id="container">
     <div id="sliderContainer">
         <span>SVG</span><input type="checkbox" id="updateSvg" checked />
+        <span>PZWA</span><input type="checkbox" id="panZoomWa" checked />
         <div id="sliderRotate"></div>
         <div id="sliderRValue"></div>
     </div>
@@ -158,9 +159,23 @@
         <a href="https://github.com/wellenvogel/leaflet-test">https://github.com/wellenvogel/leaflet-test</a>
     </div>
 </div>
-
+<script type="text/javascript">
+    function getParameterByName(name) {
+        url = window.location.href;
+        name = name.replace(/[\[\]]/g, "\\$&");
+        var regex = new RegExp("[?&]" + name + "(=([^&#]*)|&|#|$)"),
+                results = regex.exec(url);
+        if (!results) return null;
+        if (!results[2]) return '';
+        return decodeURIComponent(results[2].replace(/\+/g, " "));
+    }
+    var lv=getParameterByName('version');
+    if ( lv === undefined || lv===null) {
+        lv = "src";
+    }
+    document.writeln('<script type="text/javascript" src="lib/leaflet-'+lv+'.js"></s'+'cript>');
+</script>
 <!--<script src="http://cdn.leafletjs.com/leaflet/v0.7.7/leaflet.js"></script>-->
-<script src="lib/leaflet-src.js"></script>
 <script src="lib/nouislider.min.js"></script>
 <script src="map/RMap.js"></script>
 <script src="map/SMap.js"></script>
