@@ -107,13 +107,17 @@ L.tileLayer('https://api.tiles.mapbox.com/v4/{id}/{z}/{x}/{y}.png?access_token=p
     attribution: 'Map data &copy; <a href="http://openstreetmap.org">OpenStreetMap</a> contributors, ' +
     '<a href="http://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>, ' +
     'Imagery © <a href="http://mapbox.com">Mapbox</a>',
-    id: 'mapbox.streets'
+    id: 'mapbox.streets',
+    updateWhenIdle: true,
+    updateInterval: 500
 }).addTo(mymap);
 
 
 L.tileLayer('http://t1.openseamap.org/seamark//{z}/{x}/{y}.png', {
         maxZoom: 18,
-        attribution: 'Map data &copy; <a href="http://openseamap.org">OpenSeamaptMap</a>'
+        attribution: 'Map data &copy; <a href="http://openseamap.org">OpenSeamaptMap</a>',
+    updateWhenIdle: true,
+    updateInterval: 500
 }).addTo(mymap);
 
 
