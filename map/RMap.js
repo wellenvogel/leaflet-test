@@ -57,7 +57,7 @@ L.RMap=L.Map.extend({
       this._zoomParameter={
           scale: e.scale,
           delta: e.delta? e.delta.clone():new L.Point(0,0),
-          origin: e.origin.clone(),
+          origin: e.origin?e.origin.clone():undefined,
           zoom: e.zoom,
           center: e.center
       };
