@@ -101,6 +101,41 @@ offsets['clickMarker']=new L.Point(10,10);
 setElementPosition('centerMarker',mymap.getFrameCenter());
 setElementPosition('clickMarker',mymap.getFrameCenter());
 
+L.GridLayer.prototype._setView=function (center, zoom, noPrune, noUpdate) {
+    var tileZoom = Math.round(zoom);
+    if ((this.options.maxZoom !== undefined && tileZoom > this.options.maxZoom) ||
+        (this.options.minZoom !== undefined && tileZoom < this.options.minZoom)) {
+        tileZoom = undefined;
+    }
+
+    var tileZoomChanged = (tileZoom !== this._tileZoom);
+
+    if (!noUpdate || (tileZoomChanged && (this.options.updateWhenZooming === undefined || this.options.updateWhenZooming))) {
+
+        this._tileZoom = tileZoom;
+
+        if (this._abortLoading) {
+            this._abortLoading();
+        }
+
+        this._updateLevels();
+        this._resetGrid();
+
+        if (tileZoom !== undefined) {
+            this._update(center);
+        }
+
+        if (!noPrune) {
+            this._pruneTiles();
+        }
+
+        // Flag to prevent _updateOpacity from pruning tiles during
+        // a zoom anim or a pinch gesture
+        this._noPrune = !!noPrune;
+    }
+
+    this._setZoomTransforms(center, zoom);
+};
 
 L.tileLayer('https://api.tiles.mapbox.com/v4/{id}/{z}/{x}/{y}.png?access_token=pk.eyJ1IjoibWFwYm94IiwiYSI6ImNpandmbXliNDBjZWd2M2x6bDk3c2ZtOTkifQ._QA7i5Mpkd_m30IGElHziw', {
     maxZoom: 18,
@@ -109,15 +144,15 @@ L.tileLayer('https://api.tiles.mapbox.com/v4/{id}/{z}/{x}/{y}.png?access_token=p
     'Imagery © <a href="http://mapbox.com">Mapbox</a>',
     id: 'mapbox.streets',
     updateWhenIdle: true,
-    updateInterval: 500
+    updateWhenZooming: false
 }).addTo(mymap);
 
 
 L.tileLayer('http://t1.openseamap.org/seamark//{z}/{x}/{y}.png', {
         maxZoom: 18,
         attribution: 'Map data &copy; <a href="http://openseamap.org">OpenSeamaptMap</a>',
-    updateWhenIdle: true,
-    updateInterval: 500
+        updateWhenIdle: true,
+        updateWhenZooming: false
 }).addTo(mymap);
 
 
@@ -202,6 +237,7 @@ function updatePos(){
 function onMap(e){
     updatePos();
 }
+
 mymap.on('zoomanim',function(e){
     onMap(e);
     return;
@@ -221,6 +257,7 @@ mymap.on('zoomend',function(){
     updatePopUps();
     updatePos();
 });
+
 
 /**
  * test the scroll behavior
