@@ -76,6 +76,7 @@ check.addEventListener('change',function(){
    mymap.setSvg(check.checked);
 });
 var panZoomWa=document.getElementById('panZoomWa');
+var uwi=document.getElementById('updateWhenIdle');
 
 var offsets={};
 var clickPosition;
@@ -101,41 +102,43 @@ offsets['clickMarker']=new L.Point(10,10);
 setElementPosition('centerMarker',mymap.getFrameCenter());
 setElementPosition('clickMarker',mymap.getFrameCenter());
 
-L.GridLayer.prototype._setView=function (center, zoom, noPrune, noUpdate) {
-    var tileZoom = Math.round(zoom);
-    if ((this.options.maxZoom !== undefined && tileZoom > this.options.maxZoom) ||
-        (this.options.minZoom !== undefined && tileZoom < this.options.minZoom)) {
-        tileZoom = undefined;
-    }
-
-    var tileZoomChanged = (tileZoom !== this._tileZoom);
-
-    if (!noUpdate || (tileZoomChanged && (this.options.updateWhenZooming === undefined || this.options.updateWhenZooming))) {
-
-        this._tileZoom = tileZoom;
-
-        if (this._abortLoading) {
-            this._abortLoading();
+if (L.GridLayer) {
+    L.GridLayer.prototype._setView = function (center, zoom, noPrune, noUpdate) {
+        var tileZoom = Math.round(zoom);
+        if ((this.options.maxZoom !== undefined && tileZoom > this.options.maxZoom) ||
+            (this.options.minZoom !== undefined && tileZoom < this.options.minZoom)) {
+            tileZoom = undefined;
         }
 
-        this._updateLevels();
-        this._resetGrid();
+        var tileZoomChanged = (tileZoom !== this._tileZoom);
 
-        if (tileZoom !== undefined) {
-            this._update(center);
+        if (!noUpdate || (tileZoomChanged && !uwi.checked)) {
+
+            this._tileZoom = tileZoom;
+
+            if (this._abortLoading) {
+                this._abortLoading();
+            }
+
+            this._updateLevels();
+            this._resetGrid();
+
+            if (tileZoom !== undefined) {
+                this._update(center);
+            }
+
+            if (!noPrune) {
+                this._pruneTiles();
+            }
+
+            // Flag to prevent _updateOpacity from pruning tiles during
+            // a zoom anim or a pinch gesture
+            this._noPrune = !!noPrune;
         }
 
-        if (!noPrune) {
-            this._pruneTiles();
-        }
-
-        // Flag to prevent _updateOpacity from pruning tiles during
-        // a zoom anim or a pinch gesture
-        this._noPrune = !!noPrune;
-    }
-
-    this._setZoomTransforms(center, zoom);
-};
+        this._setZoomTransforms(center, zoom);
+    };
+}
 
 L.tileLayer('https://api.tiles.mapbox.com/v4/{id}/{z}/{x}/{y}.png?access_token=pk.eyJ1IjoibWFwYm94IiwiYSI6ImNpandmbXliNDBjZWd2M2x6bDk3c2ZtOTkifQ._QA7i5Mpkd_m30IGElHziw', {
     maxZoom: 18,
