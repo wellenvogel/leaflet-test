@@ -140,11 +140,11 @@ if (L.GridLayer) {
     };
 }
 
-L.tileLayer('https://a.tiles.openstreetmap.org/{z}/{x}/{y}.png', {
+L.tileLayer('http://a.tile.openstreetmap.org/{z}/{x}/{y}.png', {
     maxZoom: 18,
     attribution: 'Map data &copy; <a href="http://openstreetmap.org">OpenStreetMap</a> contributors, ' +
     '<a href="http://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>, ' +
-    'Imagery © <a href="http://mapbox.com">Mapbox</a>',
+    'Imagery © <a href="http://www.openstreetmap.org">OSM</a>',
     id: 'mapbox.streets',
     updateWhenIdle: true,
     updateWhenZooming: false
